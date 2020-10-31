@@ -1,67 +1,60 @@
 //import '../../assets/css/style.css';
+import { interval, of, zip } from "rxjs";
+import { concatAll, filter, last, map, skip, take } from "rxjs/operators";
 
-import { defer, from, generate, iif, of, range, timer } from "rxjs";
-import { concatAll, filter, map, pluck } from "rxjs/operators";
-import { terminalLog } from "../../utils/log-in-terminal";
-import { ajax } from "rxjs/ajax";
+//const sequence1$ = interval(1000);
 
-// const sequence$ = of({name: 'Ihor'}, {name: 'Eugene'});
-// const sequence$ = from([{name: 'Ihor'}, {name: 'Eugene'}]);
-// const sequence$ = range(0,10);
-// const sequence$ = timer(5000,1000);
-// const sequence$ = generate(1, (v) => v < 4, (v) => v + 2);
-// const random = Math.round(Math.random() * 10);
-// const sequence$ = iif(() => {
-//     return random > 5;
-// }, of(`First number is ${random}`), of(`Second number is ${random}`))
-//
-// sequence$.subscribe((v) => {
-//     console.log(v);
-// })
-//
-// const sequence$ = defer(() => {
-//     return random >= 5
-//         ? random >= 8
-//             ? of(`First number is ${random}`)
-//             : of(`Second number is ${random}`)
-//         : of(`Third number is ${random}`)
-// })
-// sequence$.subscribe((v) => {
-//     console.log(v);
-// })
+/*
+sequence1$  ---0---1---2---3---4---5---
+   map((x)=>x*3)
+            ---0---3---6---9---12---15---
+   filter((x)=>x%2===0)
+            ---0-------6-------12-------
+   take(3)
+            ---0-------6-------12|
+   last()
+sequence$   -------------------12|
+ */
 
 
-// from(fetch('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
-//     .then((res) => res.json()))
-// ajax('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
+// const sequence$ = sequence1$
 //     .pipe(
-//         pluck('response'),
-//         concatAll(),
-//         map((data: any) => `${data.firstName} ${data.surname}`))
-//     .subscribe((data) => {
-//         terminalLog(data)
-//     })
+//         map((x) => x * 3),
+//         filter((x) => x % 2 === 0),
+//         take(3),
+//         last()
+//     )
 
 
-import fs from 'fs';
-import util from 'util';
+// sequence$.subscribe((v) => {
+//     console.log(v);
+// })
 
-const promisifiedRead = util.promisify(fs.readFile)
-const read$ = from(promisifiedRead(`${__dirname}/text`))
+// const sequence2$ = of(['Igor', 'Dima', 'Nikita']);
+// /*
+//    sequence2$  ['Igor', 'Dima', 'Nikita']|
+//      concatAll()
+//    sequence$   (Igor,'Dima','Nikita')|
+//  */
+//
+// sequence2$.pipe(map((arr)=>{})).subscribe((v) => {
+//     console.log(v);
+// })
 
-read$
-    .pipe(
-        map((buffer) => {
-            const str = buffer.toString();
-            const regExp = />([^<]+)</;
-            console.log(regExp.exec(str))
-            return regExp.exec(str);
-        }),
-        filter(Boolean),
-        pluck('1'),
-        map((str: any) => str.trim())
-    )
+
+const sequence1$ = of('r', 'x', 'j', 's');
+const sequence2$ = interval(400).pipe(take(4));
+
+/*
+  sequence1$ (rxjs)|
+  sequence2$ ---0---1---2---3|
+    zip(sequence1$,sequence2$)
+              ---([r,0])---([x,1])---([j,2])---([s,3])|
+   map(([l]) => l)
+              ---r---x---j---s|
+ */
+zip(sequence1$, sequence2$)
+    .pipe(map(([l]) => l))
     .subscribe((v) => {
         console.log(v);
     })
-
