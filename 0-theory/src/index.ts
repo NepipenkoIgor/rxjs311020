@@ -1,117 +1,67 @@
-import '../../assets/css/style.css';
+//import '../../assets/css/style.css';
+
+import { defer, from, generate, iif, of, range, timer } from "rxjs";
+import { concatAll, filter, map, pluck } from "rxjs/operators";
 import { terminalLog } from "../../utils/log-in-terminal";
-import { fromEvent, interval, Observable, of, Subscriber, Subscription } from "rxjs";
-// callback
-// promise (async/await)
-// generator
+import { ajax } from "rxjs/ajax";
 
-
-// const sequence = new Promise((res) => {
-//     let count = 1;
-//     setInterval(() => {
-//         res(count++);
-//     }, 1000)
-// })
-// sequence.then((v) => terminalLog(v));
-// sequence.then((v) => terminalLog(v));
-// sequence.then((v) => terminalLog(v));
-// sequence.then((v) => terminalLog(v));
-
-
-// const fn = function* iteratorFunction() {
-//     let item = 1;
-//     while (true) {
-//         yield item++;
-//     }
-// }
-// const sequence = fn();
+// const sequence$ = of({name: 'Ihor'}, {name: 'Eugene'});
+// const sequence$ = from([{name: 'Ihor'}, {name: 'Eugene'}]);
+// const sequence$ = range(0,10);
+// const sequence$ = timer(5000,1000);
+// const sequence$ = generate(1, (v) => v < 4, (v) => v + 2);
+// const random = Math.round(Math.random() * 10);
+// const sequence$ = iif(() => {
+//     return random > 5;
+// }, of(`First number is ${random}`), of(`Second number is ${random}`))
 //
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-// terminalLog(sequence.next().value);
-
-
-// Observable - lazy push collection
-
-// const sequence = interval(1000)
-//     .subscribe((item) => {
-//         terminalLog(item);
-//     })
-
-// setTimeout(()=>{
-//     sequence.subscribe((item) => {
-//         console.log(item);
-//     })
-// }, 5000)
-
-// const sequence = interval(1000)
-//     .subscribe((item) => {
-//         console.log(item);
-//     }, (err) => {
-//
-//     }, () => {
-//         console.log('Completed ')
-//     })
-
-// const sequence = of({a: 1}, {b: 2});
-// let obj: any;
-// sequence.subscribe((item) => {
-//     console.log('Sub 1', item);
-//     obj = item;
+// sequence$.subscribe((v) => {
+//     console.log(v);
 // })
 //
-// setTimeout(() => {
-//     sequence.subscribe((item) => {
-//         console.log('Sub 2', obj === item);
-//     })
-// }, 5000)
-
-
-// const sequence = fromEvent<MouseEvent>(document, 'click');
-// sequence.subscribe((e: MouseEvent) => {
-//     terminalLog(`Sub 1 => ${e.clientX}`);
+// const sequence$ = defer(() => {
+//     return random >= 5
+//         ? random >= 8
+//             ? of(`First number is ${random}`)
+//             : of(`Second number is ${random}`)
+//         : of(`Third number is ${random}`)
 // })
-//
-// setTimeout(() => {
-//     sequence.subscribe((e: MouseEvent) => {
-//         terminalLog(`Sub 2 => ${e.clientX}`);
+// sequence$.subscribe((v) => {
+//     console.log(v);
+// })
+
+
+// from(fetch('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
+//     .then((res) => res.json()))
+// ajax('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
+//     .pipe(
+//         pluck('response'),
+//         concatAll(),
+//         map((data: any) => `${data.firstName} ${data.surname}`))
+//     .subscribe((data) => {
+//         terminalLog(data)
 //     })
-// }, 5000)
 
-const sequence = new Observable((subscriber: Subscriber<number>) => {
-    terminalLog('Observable init')
-    //let count = 1;
-    // const intervalId = setInterval(() => {
-    //     subscriber.next(count++);
-    // }, 1000)
-    //
-    // return () => {
-    //     terminalLog('unsubscribe');
-    //     clearInterval(intervalId);
-    // }
-    const fn = (e: MouseEvent) => {
-        subscriber.next(e.clientX)
-    }
-    document.addEventListener('click', fn)
 
-    return () => {
-        terminalLog('unsubscribe');
-        document.removeEventListener('click', fn);
-    }
-})
+import fs from 'fs';
+import util from 'util';
 
-const sub1: Subscription = sequence.subscribe((item: number) => {
-    terminalLog(`Sub 1 => ${item}`);
-})
+const promisifiedRead = util.promisify(fs.readFile)
+const read$ = from(promisifiedRead(`${__dirname}/text`))
 
-setTimeout(() => {
-   // sub1.unsubscribe();
-    sequence.subscribe((item: number) => {
-        terminalLog(`Sub 2 => ${item}`);
+read$
+    .pipe(
+        map((buffer) => {
+            const str = buffer.toString();
+            const regExp = />([^<]+)</;
+            console.log(regExp.exec(str))
+            return regExp.exec(str);
+        }),
+        filter(Boolean),
+        pluck('1'),
+        map((str: any) => str.trim())
+    )
+    .subscribe((v) => {
+        console.log(v);
     })
-}, 5000)
+
