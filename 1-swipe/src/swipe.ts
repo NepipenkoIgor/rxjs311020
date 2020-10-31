@@ -1,6 +1,6 @@
 import '../../assets/css/style.css';
-import { fromEvent, merge, Observable, zip } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { fromEvent, iif, merge, Observable, of, zip } from "rxjs";
+import { filter, map, pluck, switchMap } from "rxjs/operators";
 
 
 const touchStart$ = getX(
@@ -17,12 +17,21 @@ const touchEnd$ = getX(
 
 export function getX(source$: Observable<TouchEvent | MouseEvent>): Observable<number> {
     return source$
-        .pipe(map((event) => {
-            if (event instanceof TouchEvent) {
-                return event.changedTouches[0].clientX
-            }
-            return event.clientX
-        }))
+        .pipe(
+            switchMap((event: TouchEvent | MouseEvent) => {
+                return iif(
+                    () => event instanceof TouchEvent,
+                    of(event as TouchEvent).pipe(pluck('changedTouches', '0', 'clientX')),
+                    of(event as MouseEvent).pipe(pluck('clientX')),
+                )
+            })
+            // map((event) => {
+            //     if (event instanceof TouchEvent) {
+            //         return event.changedTouches[0].clientX
+            //     }
+            //     return event.clientX
+            // })
+        )
 }
 
 
