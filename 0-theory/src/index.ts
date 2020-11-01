@@ -1,50 +1,85 @@
-// import '../../assets/css/style.css'
-import { EMPTY, interval, of, zip } from "rxjs";
-import { catchError, delay, map, retry, retryWhen, switchMap, tap } from "rxjs/operators";
+ import '../../assets/css/style.css'
 
-const sequence1$ = interval(500);
-const sequence2$ = of('1', '2', '3', 4, '5', '6', '7');
 
-const sequence$ = zip(sequence1$, sequence2$);
+// Observable + Observer = Subject
+import { Component1 } from "./component-1";
+import { Component3 } from "./component-3";
+//
+// setTimeout(()=>{
+//     new Component1();
+// }, 4000)
+// new Component3();
+import { AsyncSubject, BehaviorSubject, Observable, ReplaySubject, Subject } from "rxjs";
+import { ajax } from "rxjs/ajax";
 
-sequence$
-    .pipe(
-        switchMap(([, y])=>{
-            return of(y)
-                .pipe(
-                    map((y) => {
-                        return (y as any).toUpperCase();
-                    }),
-                    catchError(() => {
-                        return  EMPTY// of('0');
-                    }),
-                )
-        })
-       //  map(([, y]) => {
-       //      // try {
-       //      //     return (y as any).toUpperCase();
-       //      // } catch (err) {
-       //      //     return '0';
-       //      // }
-       //      return (y as any).toUpperCase();
-       //  }),
-       //  tap(() => {
-       //      console.log('tap before error')
-       //  }),
-       // // retryWhen((obs)=> obs.pipe(delay(5000))),
-       //  // retry(3),
-       //  catchError((err) => {
-       //      return of('0');
-       //  }),
-       //  tap(() => {
-       //      console.log('tap after error')
-       //  }),
-    )
-    .subscribe(
-        (v) => {
-            console.log(v);
-        }, (err) => {
-            console.log(`My ERROR => ${err}`);
-        }, () => {
-            console.log('completed')
-        })
+// const sequence$ = new ReplaySubject(Number.POSITIVE_INFINITY, 500)
+//
+// setTimeout(() => {
+//     sequence$.next(1);
+// }, 400)
+// setTimeout(() => {
+//     sequence$.next(4);
+// }, 600)
+// setTimeout(() => {
+//     sequence$.next(5);
+// }, 800)
+//
+// setTimeout(() => {
+//     sequence$.subscribe((v) => {
+//         console.log(v);
+//     })
+// }, 1000)
+//
+//
+// sequence$.next(6);
+// sequence$.next(4);
+// sequence$.next(2);
+
+
+// const sequence = new BehaviorSubject({name: 'Ihor'});
+//
+// sequence.next({name: 'Eugene'})
+// setTimeout(()=>{
+//     console.log(sequence.value)
+// }, 3000)
+
+// const sequence = new AsyncSubject();
+// sequence.subscribe((v) => {
+//     console.log(v);
+// })
+// sequence.next({name: 'Eugene'})
+// sequence.next({name: 'Ihor'})
+// sequence.next({name: 'Olena'})
+//
+// setTimeout(()=>{
+//     sequence.complete();
+// }, 5000)
+//
+// setTimeout(()=>{
+//     sequence.subscribe((v) => {
+//         console.log(v);
+//     })
+// }, 10000)
+
+
+function getUsers(url: string) {
+    let subject: AsyncSubject<any>;
+    return new Observable((subscriber) => {
+        if (!subject) {
+            subject = new AsyncSubject();
+            ajax(url).subscribe(subject);
+        }
+        return subject.subscribe(subscriber)
+    })
+}
+
+const users = getUsers('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
+users.subscribe((u)=>{
+    console.log(u);
+})
+
+setTimeout(()=>{
+    users.subscribe((u)=>{
+        console.log(u);
+    })
+}, 7000)
