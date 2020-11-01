@@ -1,68 +1,77 @@
-//import '../../assets/css/style.css'
-import { ConnectableObservable, interval, ReplaySubject, Subject, Subscription } from "rxjs";
-import { multicast, publish, refCount, share } from "rxjs/operators";
+import '../../assets/css/style.css'
+// console.log('start');
+// setTimeout(()=>console.log('time1'));
+// setTimeout(()=>console.log('time2'));
+// Promise.resolve().then(()=>console.log('promise1'));
+// Promise.resolve().then(()=>console.log('promise2'));
+// console.log('end');
 
-// const control$$ = new ReplaySubject(2);
-//
-// const sequence = interval(1000)
-//
-// const connectableObservable = sequence
+
+// asap - microtask
+// async - macrotask
+// queue  - sync iteration
+// animation  - animationFrame
+
+import { asap, asapScheduler, asyncScheduler, combineLatest, from, of, queueScheduler, Subject } from "rxjs";
+import { map, observeOn, subscribeOn, take, tap } from "rxjs/operators";
+
+// console.log('start');
+// of(1, 2, 3)
 //     .pipe(
-//         // multicast(control$$)
-//         publish() // multicast + subject,
-//
-//     ) as ConnectableObservable<any>
-//
-// connectableObservable.subscribe((v) => {
-//     console.log('Sub 1 ==>', v);
-// })
-// connectableObservable.connect();
-//
-// // setTimeout(() => {
-// //     connectableObservable.connect();
-// // }, 5000)
-//
-//
-// setTimeout(() => {
-//     connectableObservable.subscribe((v) => {
-//         console.log('Sub 2 ==>', v);
+//         tap((v) => {
+//             console.log('tap1', v)
+//         }),
+//         observeOn(asyncScheduler),
+//         tap((v) => {
+//             console.log('tap2', v)
+//         }),
+//         subscribeOn(asyncScheduler)
+//     )
+//     .subscribe((v) => {
+//         console.log(v)
 //     })
-// }, 5000)
+// setTimeout(() => console.log('time1'));
+// setTimeout(() => console.log('time2'));
+// console.log('end');
+
+/*
+  Macro-------Macro---------Macro------Macro------Macro----
+  start       subscribe     time1      time2      tap2-1
+  end         tap1-1                              1
+               tap1-2                              .....
+                tap1-3
+
+ */
 
 
-const sequence = interval(1000)
+/*
+  Macro-------Macro-----Macro------Macro------Macro----
+  start       time1     time2
+  end
+  promise1
+  promise2
+ */
 
-const regularObservable = sequence
-    .pipe(
-        // multicast(control$$)
-        // publish(), // multicast + subject,
-        // refCount()
-        share() // multicast + subject + refCount
-    )
-let sub1: Subscription;
-let sub2: Subscription;
-sub1 = regularObservable.subscribe((v) => {
-    console.log('Sub 1 ==>', v);
-})
+// const a$ = from([1, 2], asapScheduler);
+// const b$ = of(10);
+//
+// const c$ = combineLatest([a$, b$])
+//     .pipe(map(([v1, v2]) => v1 + v2))
+//
+//
+// c$.subscribe((v) => {
+//     console.log(v);
+// })
 
-// setTimeout(() => {
-//     connectableObservable.connect();
-// }, 5000)
+const signal = new Subject<number>();
+let count = 0;
+const someCalc = (count: number) => console.log('do calc with', count);
 
-
-setTimeout(() => {
-    sub2 = regularObservable.subscribe((v) => {
-        console.log('Sub 2 ==>', v);
+console.log('start')
+signal.pipe(observeOn(queueScheduler), take(5000))
+    .subscribe((v: number) => {
+        someCalc(v);
+        signal.next(v);
     })
-}, 5000)
-
-setTimeout(() => {
-    sub1.unsubscribe();
-    sub2.unsubscribe();
-}, 7000)
-
-setTimeout(() => {
-    regularObservable.subscribe((v) => {
-        console.log('Sub 3 ==>', v);
-    })
-}, 10000)
+signal.next(count++);
+console.log('end')
