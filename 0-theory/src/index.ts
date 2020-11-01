@@ -1,85 +1,68 @@
- import '../../assets/css/style.css'
+//import '../../assets/css/style.css'
+import { ConnectableObservable, interval, ReplaySubject, Subject, Subscription } from "rxjs";
+import { multicast, publish, refCount, share } from "rxjs/operators";
 
-
-// Observable + Observer = Subject
-import { Component1 } from "./component-1";
-import { Component3 } from "./component-3";
+// const control$$ = new ReplaySubject(2);
 //
-// setTimeout(()=>{
-//     new Component1();
-// }, 4000)
-// new Component3();
-import { AsyncSubject, BehaviorSubject, Observable, ReplaySubject, Subject } from "rxjs";
-import { ajax } from "rxjs/ajax";
-
-// const sequence$ = new ReplaySubject(Number.POSITIVE_INFINITY, 500)
+// const sequence = interval(1000)
 //
-// setTimeout(() => {
-//     sequence$.next(1);
-// }, 400)
-// setTimeout(() => {
-//     sequence$.next(4);
-// }, 600)
-// setTimeout(() => {
-//     sequence$.next(5);
-// }, 800)
+// const connectableObservable = sequence
+//     .pipe(
+//         // multicast(control$$)
+//         publish() // multicast + subject,
 //
-// setTimeout(() => {
-//     sequence$.subscribe((v) => {
-//         console.log(v);
-//     })
-// }, 1000)
+//     ) as ConnectableObservable<any>
 //
-//
-// sequence$.next(6);
-// sequence$.next(4);
-// sequence$.next(2);
-
-
-// const sequence = new BehaviorSubject({name: 'Ihor'});
-//
-// sequence.next({name: 'Eugene'})
-// setTimeout(()=>{
-//     console.log(sequence.value)
-// }, 3000)
-
-// const sequence = new AsyncSubject();
-// sequence.subscribe((v) => {
-//     console.log(v);
+// connectableObservable.subscribe((v) => {
+//     console.log('Sub 1 ==>', v);
 // })
-// sequence.next({name: 'Eugene'})
-// sequence.next({name: 'Ihor'})
-// sequence.next({name: 'Olena'})
+// connectableObservable.connect();
 //
-// setTimeout(()=>{
-//     sequence.complete();
-// }, 5000)
+// // setTimeout(() => {
+// //     connectableObservable.connect();
+// // }, 5000)
 //
-// setTimeout(()=>{
-//     sequence.subscribe((v) => {
-//         console.log(v);
+//
+// setTimeout(() => {
+//     connectableObservable.subscribe((v) => {
+//         console.log('Sub 2 ==>', v);
 //     })
-// }, 10000)
+// }, 5000)
 
 
-function getUsers(url: string) {
-    let subject: AsyncSubject<any>;
-    return new Observable((subscriber) => {
-        if (!subject) {
-            subject = new AsyncSubject();
-            ajax(url).subscribe(subject);
-        }
-        return subject.subscribe(subscriber)
-    })
-}
+const sequence = interval(1000)
 
-const users = getUsers('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
-users.subscribe((u)=>{
-    console.log(u);
+const regularObservable = sequence
+    .pipe(
+        // multicast(control$$)
+        // publish(), // multicast + subject,
+        // refCount()
+        share() // multicast + subject + refCount
+    )
+let sub1: Subscription;
+let sub2: Subscription;
+sub1 = regularObservable.subscribe((v) => {
+    console.log('Sub 1 ==>', v);
 })
 
-setTimeout(()=>{
-    users.subscribe((u)=>{
-        console.log(u);
+// setTimeout(() => {
+//     connectableObservable.connect();
+// }, 5000)
+
+
+setTimeout(() => {
+    sub2 = regularObservable.subscribe((v) => {
+        console.log('Sub 2 ==>', v);
     })
+}, 5000)
+
+setTimeout(() => {
+    sub1.unsubscribe();
+    sub2.unsubscribe();
 }, 7000)
+
+setTimeout(() => {
+    regularObservable.subscribe((v) => {
+        console.log('Sub 3 ==>', v);
+    })
+}, 10000)
