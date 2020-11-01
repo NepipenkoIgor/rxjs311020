@@ -1,33 +1,50 @@
-import '../../assets/css/style.css'
-import { fromEvent, interval, of } from "rxjs";
-import { concatMap, exhaustMap, map, mergeAll, mergeMap, pluck, switchMap } from "rxjs/operators";
-import { ajax } from "rxjs/ajax";
+// import '../../assets/css/style.css'
+import { EMPTY, interval, of, zip } from "rxjs";
+import { catchError, delay, map, retry, retryWhen, switchMap, tap } from "rxjs/operators";
 
-// const sequence$ = interval(2000)
-//     .pipe(
-//         mergeMap((v) => {
-//             return of(v * 2)
-//         }),
-//         // map+ mergeAll() => mergeMap
-//     )
-//
-// sequence$.subscribe((value) => {
-//     console.log(value)
-// })
+const sequence1$ = interval(500);
+const sequence2$ = of('1', '2', '3', 4, '5', '6', '7');
 
-const sequence$ = fromEvent(document, 'click')
+const sequence$ = zip(sequence1$, sequence2$);
+
+sequence$
     .pipe(
-        exhaustMap((v) => {
-            return ajax('http://learn.javascript.ru/courses/groups/api/participants?key=dzteou')
-                .pipe(pluck('response'))
-        }),
-        // map+ mergeAll() => mergeMap
-        // map+ switchAll() => mergeMap
-        // map+ concatMap() => concatMap
-        // map+ exhaust() => exhaustMap
+        switchMap(([, y])=>{
+            return of(y)
+                .pipe(
+                    map((y) => {
+                        return (y as any).toUpperCase();
+                    }),
+                    catchError(() => {
+                        return  EMPTY// of('0');
+                    }),
+                )
+        })
+       //  map(([, y]) => {
+       //      // try {
+       //      //     return (y as any).toUpperCase();
+       //      // } catch (err) {
+       //      //     return '0';
+       //      // }
+       //      return (y as any).toUpperCase();
+       //  }),
+       //  tap(() => {
+       //      console.log('tap before error')
+       //  }),
+       // // retryWhen((obs)=> obs.pipe(delay(5000))),
+       //  // retry(3),
+       //  catchError((err) => {
+       //      return of('0');
+       //  }),
+       //  tap(() => {
+       //      console.log('tap after error')
+       //  }),
     )
-
-sequence$.subscribe((value) => {
-    console.log(value)
-})
-
+    .subscribe(
+        (v) => {
+            console.log(v);
+        }, (err) => {
+            console.log(`My ERROR => ${err}`);
+        }, () => {
+            console.log('completed')
+        })

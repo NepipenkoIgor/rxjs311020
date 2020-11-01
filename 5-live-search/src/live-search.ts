@@ -1,6 +1,6 @@
-import { Observable } from "rxjs";
+import { EMPTY, Observable, of } from "rxjs";
 import {
-    bufferCount,
+    bufferCount, catchError,
     concatAll,
     debounceTime,
     distinctUntilChanged,
@@ -55,7 +55,10 @@ export function request(source$: Observable<AjaxResponse>): Observable<any> {
             reduce((resultStr: string, htmlStrs: string[]) => {
                 return `${resultStr}${createRow(htmlStrs)}`
             }, ''),
-            map((htmlStr) => htmlStr.trim().replace(/\s+(<)/g, '<'))
+            map((htmlStr) => htmlStr.trim().replace(/\s+(<)/g, '<')),
+            catchError(() => {
+                return  EMPTY
+            }),
         )
 }
 
